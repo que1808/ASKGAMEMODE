@@ -15,6 +15,10 @@ let maxAttempts = 3;
 let hintUsed = false;
 let timeLimit = 15; // seconds
 let timer = null;
+let flashcardPool = [];
+let currentFlashcard = null;
+let progressStats = {};
+let performanceData = [];
 
 // Sound effects
 const correctSound = new Audio('sounds/correct.mp3');
@@ -82,7 +86,7 @@ const categoryImages = {
 document.addEventListener('DOMContentLoaded', function() {
     // Function to show the active window
     function showWindow(windowId) {
-        document.querySelectorAll('#welcome-screen, #category-menu, #game-screen, #results-screen').forEach(window => {
+        document.querySelectorAll('#welcome-screen, #category-menu, #game-screen, #results-screen, #flashcard-screen, #progress-screen').forEach(window => {
             window.style.display = 'none';
         });
         document.getElementById(windowId).style.display = 'block';
@@ -100,13 +104,11 @@ document.addEventListener('DOMContentLoaded', function() {
             button.className = 'list_button';
             button.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- SVG icon code -->
                     <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
                 </svg>
                 <p class="list_text">${category.replace(/-/g, ' ')}</p>
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <!-- SVG icon code -->
                     <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
             `;
@@ -201,9 +203,12 @@ document.addEventListener('DOMContentLoaded', function() {
         clearInterval(timer);
         let timeLeft = timeLimit;
         updateTimerDisplay(timeLeft);
+        document.getElementById('time-progress-fill').style.width = '100%';
         timer = setInterval(() => {
             timeLeft--;
             updateTimerDisplay(timeLeft);
+            const progressPercent = (timeLeft / timeLimit) * 100;
+            document.getElementById('time-progress-fill').style.width = `${progressPercent}%`;
             if (timeLeft <= 0) {
                 clearInterval(timer);
                 timeUpSound.play();
@@ -240,6 +245,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             answeredQuestions++;
             setTimeout(() => {
+                document.getElementById('answer-input').disabled = false;
+                document.getElementById('submit-answer').disabled = false;
                 loadNextImage();
             }, 2000);
         } else {
@@ -260,6 +267,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 streak = 0;
                 answeredQuestions++;
                 setTimeout(() => {
+                    document.getElementById('answer-input').disabled = false;
+                    document.getElementById('submit-answer').disabled = false;
                     loadNextImage();
                 }, 2000);
             }

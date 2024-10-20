@@ -17,6 +17,7 @@
                 </div>
                 <div class="header_cta">
                     <button id="start-game" class="btn">Start Spillet</button>
+                    <button id="start-flashcard" class="btn">Flashkort Modus</button>
                 </div>
             </div>
         </div>
@@ -63,6 +64,18 @@
             <p id="final-streak"></p>
             <button id="play-again" class="btn">Spill igjen</button>
             <button id="back-to-categories-from-results" class="btn back-btn">Tilbake til kategorier</button>
+        </div>
+
+        <!-- Flashcard Screen -->
+        <div id="flashcard-screen" style="display: none;">
+            <button id="back-to-main-from-flashcard" class="btn back-btn">Tilbake til hovedmeny</button>
+            <h2>Flashkort Modus</h2>
+            <div id="flashcard-container">
+                <img id="flashcard-image" alt="ASK Tegn">
+                <p id="flashcard-answer" style="display: none;"></p>
+            </div>
+            <button id="show-answer" class="btn">Vis Svar</button>
+            <button id="next-flashcard" class="btn" style="display: none;">Neste</button>
         </div>
     </div>
 
