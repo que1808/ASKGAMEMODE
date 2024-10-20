@@ -5,26 +5,34 @@
     box-sizing: border-box;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Spline+Sans:wght@300;400;700&display=swap');
 
-a, p, h1, h2, h3, h4, h5, h6, li, button, input {
+body, button, input {
     font-family: 'Spline Sans', sans-serif;
 }
 
 :root {
-    --fs-xl: 1.8rem;
-    --fs-l: 1.4rem;
-    --fs-m: 1.1rem;
-    --fs-s: 0.9rem;
+    --fs-xl: clamp(1.8rem, 4vw, 2.5rem);
+    --fs-l: clamp(1.4rem, 3vw, 2rem);
+    --fs-m: clamp(1.1rem, 2.5vw, 1.5rem);
+    --fs-s: clamp(0.9rem, 2vw, 1.2rem);
     --primary-color: #6C63FF;
     --secondary-color: #FF6584;
     --background-color: #1E1E2F;
     --text-color: #FFFFFF;
+    --accent-color: #FFD700;
+    --error-color: #FF4136;
+    --success-color: #2ECC40;
+    --warning-color: #FF851B;
 }
 
 body {
-    padding: 10px 0;
     background-color: #282A36;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
 }
 
 button {
@@ -37,18 +45,21 @@ li {
     list-style: none;
 }
 
+/* Main Container */
 .uichallenge {
-    margin: auto;
-    width: 450px;
-    height: 800px;
+    width: 100%;
+    max-width: 450px;
+    min-height: 600px;
     border-radius: 30px;
     background-color: var(--background-color);
     color: var(--text-color);
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
+/* Header Styles */
 .header {
     text-align: center;
     padding: 50px 20px;
@@ -69,7 +80,7 @@ li {
     position: absolute;
     top: 0;
     left: 0;
-    border-radius: 0 0 200px 200px;
+    border-radius: 0 0 50% 50% / 0 0 100% 100%;
     z-index: -1;
 }
 
@@ -89,38 +100,55 @@ li {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
+    gap: 10px;
 }
 
+/* Button Styles */
 .btn {
     background-color: var(--primary-color);
     color: var(--text-color);
     padding: 12px 20px;
     border-radius: 10px;
-    margin: 10px 5px;
     font-size: var(--fs-m);
     transition: background-color 0.3s ease, transform 0.3s;
 }
 
-.btn:hover {
+.btn:hover, .btn:focus {
     background-color: var(--secondary-color);
     transform: translateY(-2px);
+    outline: none;
 }
 
+.back-btn {
+    background-color: #6c757d;
+    color: white;
+    align-self: flex-start;
+    padding: 10px 15px;
+    border-radius: 5px;
+    font-size: var(--fs-s);
+    margin-bottom: 10px;
+}
+
+.back-btn:hover, .back-btn:focus {
+    background-color: #5a6268;
+}
+
+/* Menu Styles */
 .menu {
-    margin-top: 60px;
-    padding: 0 20px;
+    padding: 20px;
 }
 
 .menu_title {
     font-size: var(--fs-l);
     color: rgb(200, 200, 200);
-    padding-left: 15px;
     margin-bottom: 20px;
     text-align: center;
 }
 
-.list_item_wrapper {
-    margin-top: 10px;
+#category-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .list_item {
@@ -140,6 +168,10 @@ li {
     align-items: center;
 }
 
+.list_button:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
 .list_item svg {
     justify-self: center;
 }
@@ -149,6 +181,7 @@ li {
     font-size: var(--fs-m);
 }
 
+/* Game Screen Styles */
 #game-screen {
     padding: 20px;
     display: flex;
@@ -195,8 +228,14 @@ li {
     color: var(--text-color);
 }
 
+#answer-input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
 #answer-input:disabled {
-    background-color: rgba(255, 255, 255, 0.05);
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 #submit-answer, #show-hint {
@@ -211,23 +250,22 @@ li {
 
 #time-progress-bar {
     width: 100%;
-    background-color: #ddd;
+    background-color: rgba(255, 255, 255, 0.2);
     border-radius: 5px;
     overflow: hidden;
-    height: 20px;
+    height: 10px;
     margin-top: 10px;
 }
 
 #time-progress-fill {
     height: 100%;
     width: 100%;
-    background-color: #28a745;
+    background-color: var(--accent-color);
     transition: width 1s linear;
 }
-
 #feedback-container {
     margin-top: 15px;
-    min-height: 80px;
+    min-height: 60px;
 }
 
 #feedback {
@@ -238,18 +276,18 @@ li {
 }
 
 .alert-success {
-    background-color: rgba(40, 167, 69, 0.2);
-    color: #28a745;
+    background-color: rgba(46, 204, 64, 0.2);
+    color: var(--success-color);
 }
 
 .alert-warning {
-    background-color: rgba(255, 193, 7, 0.2);
-    color: #ffc107;
+    background-color: rgba(255, 133, 27, 0.2);
+    color: var(--warning-color);
 }
 
 .alert-danger {
-    background-color: rgba(220, 53, 69, 0.2);
-    color: #dc3545;
+    background-color: rgba(255, 65, 54, 0.2);
+    color: var(--error-color);
 }
 
 .alert-info {
@@ -263,21 +301,14 @@ li {
     font-size: var(--fs-s);
 }
 
-.back-btn {
-    background-color: #6c757d;
-    color: white;
-    align-self: flex-start;
-}
-
-.back-btn:hover {
-    background-color: #5a6268;
-}
-
+/* Results Screen Styles */
 #results-screen {
     padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    height: 100%;
 }
 
 #results-screen h2 {
@@ -291,55 +322,121 @@ li {
 }
 
 #results-screen .btn {
-    margin: 10px 5px;
+    margin: 10px 0;
 }
 
+/* Flashcard Screen Styles */
 #flashcard-screen {
     padding: 20px;
     display: flex;
     flex-direction: column;
     align-items: center;
+    height: 100%;
+}
+
+#flashcard-screen h2 {
+    font-size: var(--fs-l);
+    margin-bottom: 15px;
 }
 
 #flashcard-container {
     margin: 20px 0;
     text-align: center;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
 }
 
 #flashcard-image {
     max-width: 100%;
     max-height: 300px;
     border-radius: 10px;
+    margin-bottom: 15px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
 }
 
 #flashcard-answer {
-    margin-top: 20px;
     font-size: var(--fs-m);
+    color: var(--accent-color);
+    margin-top: 10px;
+    min-height: 30px;
 }
 
-.btn:focus, #answer-input:focus {
-    outline: 2px solid var(--secondary-color);
+#show-answer, #next-flashcard {
+    width: 100%;
+    max-width: 200px;
+    margin-top: 10px;
+}
+
+/* Progress Screen Styles */
+#progress-screen {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#progress-screen h2 {
+    font-size: var(--fs-l);
+    margin-bottom: 15px;
+}
+
+#progress-container {
+    width: 100%;
+}
+
+.progress-item {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.progress-item h3 {
+    font-size: var(--fs-m);
+    margin-bottom: 10px;
+    color: var(--accent-color);
+}
+
+.progress-item p {
+    font-size: var(--fs-s);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.uichallenge > * {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Accessibility Improvements */
+.btn:focus-visible,
+#answer-input:focus-visible {
+    outline: 3px solid var(--accent-color);
     outline-offset: 2px;
 }
 
-.btn, #answer-input, #current-image {
-    transition: all 0.3s ease;
+/* Add this to improve keyboard navigation */
+.btn:focus:not(:focus-visible),
+#answer-input:focus:not(:focus-visible) {
+    outline: none;
 }
 
-#current-image:hover {
-    transform: scale(1.05);
-}
-
+/* Responsive Design */
 @media (max-width: 480px) {
     .uichallenge {
-        width: 100%;
-        height: 100vh;
         border-radius: 0;
+        min-height: 100vh;
     }
 
     .header::after {
-        border-radius: 0 0 100px 100px;
+        border-radius: 0 0 25% 25% / 0 0 50% 50%;
     }
 
     .header_cta {
@@ -348,14 +445,13 @@ li {
 
     .btn {
         width: 100%;
-        margin: 5px 0;
     }
 
-    #image-container {
+    #image-container, #flashcard-container {
         margin: 10px 0;
     }
 
-    #current-image {
+    #current-image, #flashcard-image {
         max-height: 200px;
     }
 
@@ -365,5 +461,38 @@ li {
 
     #timer-display, #score-display, #progress {
         font-size: var(--fs-s);
+    }
+
+    .back-btn {
+        font-size: var(--fs-s);
+        padding: 8px 12px;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    :root {
+        --primary-color: #0000FF;
+        --secondary-color: #FF0000;
+        --background-color: #000000;
+        --text-color: #FFFFFF;
+        --accent-color: #FFFF00;
+        --error-color: #FF0000;
+        --success-color: #00FF00;
+        --warning-color: #FFA500;
+    }
+
+    .btn, #answer-input, #time-progress-bar {
+        border: 2px solid var(--text-color);
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .uichallenge > *,
+    .btn,
+    #time-progress-fill {
+        animation: none;
+        transition: none;
     }
 }

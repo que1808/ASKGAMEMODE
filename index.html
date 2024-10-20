@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="uichallenge">
-        <div id="welcome-screen" class="header">
+        <main id="welcome-screen" class="header">
             <div class="header_content">
                 <div class="header_text">
                     <h1 id="ask123-tegn-til-tale" class="header_text_title">ASK123 Tegn til Tale</h1>
@@ -20,23 +20,24 @@
                     <button id="view-progress" class="btn">Se Progresjon</button>
                 </div>
             </div>
-        </div>
+        </main>
 
-        <div id="category-menu" class="menu" style="display: none;">
-            <h3 id="velg-en-kategori" class="menu_title">Velg en Kategori</h3>
+        <section id="category-menu" class="menu" style="display: none;">
+            <h2 id="velg-en-kategori" class="menu_title">Velg en Kategori</h2>
             <ul id="category-buttons"></ul>
             <button id="back-to-main" class="btn back-btn">Tilbake til hovedmeny</button>
-        </div>
+        </section>
 
-        <div id="game-screen" style="display: none;">
+        <section id="game-screen" style="display: none;">
             <button id="back-to-categories-game" class="btn back-btn">Tilbake til kategorier</button>
             <h2 id="category-title"></h2>
             <div id="image-container">
-                <img id="current-image" alt="ASK Tegn">
+                <img id="current-image" src="" alt="ASK Tegn">
             </div>
             <div id="answer-section">
                 <input type="text" id="answer-input" placeholder="Skriv inn svaret">
                 <button id="submit-answer" class="btn">Submit</button>
+                <button id="show-hint" class="btn">Vis Hint</button>
             </div>
             <div id="timer-display">
                 Tid igjen: <span id="timer">15</span> sekunder
@@ -56,38 +57,34 @@
                 Progresjon: <span id="progress-percentage">0</span>%
                 (<span id="answered-questions">0</span>/<span id="total-questions">0</span>)
             </div>
-        </div>
+        </section>
 
-        <div id="results-screen" style="display: none;">
+        <section id="results-screen" style="display: none;">
             <h2>Spillet er ferdig!</h2>
             <p id="final-score"></p>
             <p id="final-streak"></p>
             <button id="play-again" class="btn">Spill igjen</button>
             <button id="back-to-categories-from-results" class="btn">Tilbake til kategorier</button>
-        </div>
+        </section>
 
-        <div id="flashcard-screen" style="display: none;">
+        <section id="flashcard-screen" style="display: none;">
             <button id="back-to-main-from-flashcard" class="btn back-btn">Tilbake til hovedmeny</button>
             <h2>Flashkort Modus</h2>
             <div id="flashcard-container">
-                <img id="flashcard-image" alt="ASK Tegn">
+                <img id="flashcard-image" src="" alt="ASK Tegn">
                 <p id="flashcard-answer" style="display: none;"></p>
             </div>
             <button id="show-answer" class="btn">Vis Svar</button>
             <button id="next-flashcard" class="btn" style="display: none;">Neste</button>
-        </div>
+        </section>
 
-        <div id="progress-screen" style="display: none;">
+        <section id="progress-screen" style="display: none;">
             <button id="back-to-main-from-progress" class="btn back-btn">Tilbake til hovedmeny</button>
             <h2>Din Progresjon</h2>
-            <div id="progress-details">
-                <!-- Progress details will be populated here -->
-            </div>
-            <canvas id="learning-curve-chart" width="400" height="200"></canvas>
-        </div>
+            <div id="progress-container"></div>
+        </section>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="ask_game.js"></script>
 </body>
 </html>

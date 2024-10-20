@@ -1,31 +1,4 @@
-// ask_game.js - Primary JavaScript file for the ASK Game
-
-// Game variables
-let categories = [];
-let imagePool = [];
-let score = 0;
-let streak = 0;
-let highScore = 0;
-let answeredQuestions = 0;
-let totalQuestions = 0;
-let currentCategory = null;
-let correctAnswer = "";
-let attempts = 0;
-let maxAttempts = 3;
-let hintUsed = false;
-let timeLimit = 15; // seconds
-let timer = null;
-let flashcardPool = [];
-let currentFlashcard = null;
-let progressStats = {};
-let performanceData = [];
-
-// Sound effects
-const correctSound = new Audio('sounds/correct.mp3');
-const incorrectSound = new Audio('sounds/incorrect.mp3');
-const timeUpSound = new Audio('sounds/timeup.mp3');
-
-// Define categories, images, and hints
+// Game data
 const categoryImages = {
     "Daglig-Behov": [
         { image: "vente.jpg", hint: "Noe du gjør når du står i kø" },
@@ -83,222 +56,218 @@ const categoryImages = {
     ]
 };
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Function to show the active window
-    function showWindow(windowId) {
-        document.querySelectorAll('#welcome-screen, #category-menu, #game-screen, #results-screen, #flashcard-screen, #progress-screen').forEach(window => {
-            window.style.display = 'none';
-        });
-        document.getElementById(windowId).style.display = 'block';
-    }
+// Game state
+const gameState = {
+    currentCategory: null,
+    currentQuestionIndex: 0,
+    score: 0,
+    streak: 0,
+    timer: null,
+    timeLeft: 30,
+    hintsUsed: 0,
+    currentHint: null,
+    highScore: 0,
+    imagePool: [],
+    correctAnswer: "",
+    attempts: 0,
+    maxAttempts: 3,
+    hintUsed: false,
+    timeLimit: 15,
+    totalQuestions: 0,
+    answeredQuestions: 0
+};
 
-    // Load categories into the start menu
-    function loadCategories() {
-        categories = Object.keys(categoryImages);
-        const categoryButtons = document.getElementById('category-buttons');
-        categoryButtons.innerHTML = '';
-        categories.forEach(category => {
-            const li = document.createElement('li');
-            li.className = 'list_item';
-            const button = document.createElement('button');
-            button.className = 'list_button';
-            button.innerHTML = `
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                </svg>
-                <p class="list_text">${category.replace(/-/g, ' ')}</p>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="9 18 15 12 9 6"></polyline>
-                </svg>
-            `;
-            button.onclick = () => startCategory(category);
-            li.appendChild(button);
-            categoryButtons.appendChild(li);
-        });
-    }
+// Sound effects
+const correctSound = new Audio('sounds/correct.mp3');
+const incorrectSound = new Audio('sounds/incorrect.mp3');
+const timeUpSound = new Audio('sounds/timeup.mp3');
 
-    // Start a category
-    function startCategory(category) {
-        resetGameState();
-        currentCategory = category;
-        imagePool = [...categoryImages[category]];
-        totalQuestions = imagePool.length;
-        answeredQuestions = 0;
-        updateProgressDisplay();
-        document.getElementById('category-title').textContent = category.replace(/-/g, ' ');
-        showWindow('game-screen');
-        loadNextImage();
-    }
+// Utility functions
+function showWindow(windowId) {
+    const windows = ['welcome-screen', 'category-menu', 'game-screen', 'results-screen', 'flashcard-screen', 'progress-screen'];
+    windows.forEach(id => {
+        document.getElementById(id).style.display = id === windowId ? 'block' : 'none';
+    });
+}
 
-    // Reset game state
-    function resetGameState() {
-        score = 0;
-        streak = 0;
-        highScore = 0;
-        answeredQuestions = 0;
-        attempts = 0;
-        hintUsed = false;
-        clearInterval(timer);
+function updateScoreDisplay() {
+    document.getElementById('score').textContent = gameState.score;
+    document.getElementById('streak').textContent = gameState.streak;
+    document.getElementById('high-score').textContent = gameState.highScore;
+}
 
-        // Reset UI elements
+function updateProgressDisplay() {
+    const progressPercentage = (gameState.answeredQuestions / gameState.totalQuestions) * 100;
+    document.getElementById('progress-percentage').textContent = progressPercentage.toFixed(1);
+    document.getElementById('answered-questions').textContent = gameState.answeredQuestions;
+    document.getElementById('total-questions').textContent = gameState.totalQuestions;
+}
+
+// Game logic
+function loadCategories() {
+    const categoryButtons = document.getElementById('category-buttons');
+    categoryButtons.innerHTML = '';
+    Object.keys(categoryImages).forEach(category => {
+        const li = document.createElement('li');
+        li.className = 'list_item';
+        const button = document.createElement('button');
+        button.className = 'list_button';
+        button.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+            <p class="list_text">${category.replace(/-/g, ' ')}</p>
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        `;
+        button.onclick = () => startCategory(category);
+        li.appendChild(button);
+        categoryButtons.appendChild(li);
+    });
+    showWindow('category-menu');
+}
+
+function startCategory(category) {
+    resetGameState();
+    gameState.currentCategory = category;
+    gameState.imagePool = [...categoryImages[category]];
+    gameState.totalQuestions = gameState.imagePool.length;
+    gameState.answeredQuestions = 0;
+    updateProgressDisplay();
+    document.getElementById('category-title').textContent = category.replace(/-/g, ' ');
+    showWindow('game-screen');
+    loadNextImage();
+}
+
+function resetGameState() {
+    gameState.score = 0;
+    gameState.streak = 0;
+    gameState.answeredQuestions = 0;
+    gameState.attempts = 0;
+    gameState.hintUsed = false;
+    clearInterval(gameState.timer);
+
+    document.getElementById('answer-input').value = '';
+    document.getElementById('answer-input').disabled = false;
+    document.getElementById('submit-answer').disabled = false;
+    document.getElementById('feedback').style.display = 'none';
+    document.getElementById('timer').textContent = gameState.timeLimit;
+    updateScoreDisplay();
+    updateProgressDisplay();
+}
+
+function loadNextImage() {
+    if (gameState.imagePool.length > 0) {
+        const randomIndex = Math.floor(Math.random() * gameState.imagePool.length);
+        const imageData = gameState.imagePool.splice(randomIndex, 1)[0];
+        gameState.correctAnswer = imageData.image.split('.')[0].toLowerCase();
+
+        const img = document.getElementById('current-image');
+        img.src = `images/${gameState.currentCategory}/${imageData.image}`;
+        img.alt = `ASK Tegn: ${gameState.correctAnswer}`;
+        img.onerror = () => {
+            img.src = 'placeholder.jpg';
+            img.alt = 'Bilde ikke tilgjengelig';
+        };
+
         document.getElementById('answer-input').value = '';
         document.getElementById('answer-input').disabled = false;
         document.getElementById('submit-answer').disabled = false;
         document.getElementById('feedback').style.display = 'none';
-        document.getElementById('timer').textContent = timeLimit;
-        document.getElementById('score').textContent = '0';
-        document.getElementById('streak').textContent = '0';
-        document.getElementById('high-score').textContent = '0';
-        document.getElementById('progress-percentage').textContent = '0';
-        document.getElementById('answered-questions').textContent = '0';
-        document.getElementById('total-questions').textContent = '0';
-
-        // Reset image and category data
-        currentCategory = null;
-        imagePool = [];
-        correctAnswer = "";
+        gameState.attempts = 0;
+        gameState.hintUsed = false;
+        gameState.currentHint = imageData.hint;
+        updateProgressDisplay();
+        startTimer();
+    } else {
+        showResults();
     }
+}
 
-    // Load the next image
-    function loadNextImage() {
-        if (imagePool.length > 0) {
-            const randomIndex = Math.floor(Math.random() * imagePool.length);
-            const imageData = imagePool.splice(randomIndex, 1)[0];
-            correctAnswer = imageData.image.split('.')[0];
+function startTimer() {
+    clearInterval(gameState.timer);
+    gameState.timeLeft = gameState.timeLimit;
+    updateTimerDisplay(gameState.timeLeft);
+    document.getElementById('time-progress-fill').style.width = '100%';
+    gameState.timer = setInterval(() => {
+        gameState.timeLeft--;
+        updateTimerDisplay(gameState.timeLeft);
+        const progressPercent = (gameState.timeLeft / gameState.timeLimit) * 100;
+        document.getElementById('time-progress-fill').style.width = `${progressPercent}%`;
+        if (gameState.timeLeft <= 0) {
+            clearInterval(gameState.timer);
+            timeUpSound.play();
+            checkAnswer(true); // Time's up
+        }
+    }, 1000);
+}
 
-            const img = document.getElementById('current-image');
-            img.src = `images/${currentCategory}/${imageData.image}`;
-            img.alt = `ASK Tegn: ${correctAnswer}`;
+function updateTimerDisplay(time) {
+    document.getElementById('timer').textContent = time;
+}
 
-            document.getElementById('answer-input').value = '';
+function checkAnswer(timeUp = false) {
+    const userAnswer = document.getElementById('answer-input').value.trim().toLowerCase();
+    const feedback = document.getElementById('feedback');
+
+    document.getElementById('answer-input').disabled = true;
+    document.getElementById('submit-answer').disabled = true;
+
+    clearInterval(gameState.timer);
+
+    if (userAnswer === gameState.correctAnswer && !timeUp) {
+        feedback.textContent = 'Riktig!';
+        feedback.className = 'alert-success';
+        feedback.style.display = 'block';
+        correctSound.play();
+        gameState.score += gameState.hintUsed ? 5 : 10;
+        gameState.streak++;
+        if (gameState.streak > gameState.highScore) {
+            gameState.highScore = gameState.streak;
+        }
+        gameState.answeredQuestions++;
+        setTimeout(() => {
+            loadNextImage();
+        }, 2000);
+    } else {
+        gameState.attempts++;
+        incorrectSound.play();
+        if (gameState.attempts < gameState.maxAttempts && !timeUp) {
+            feedback.textContent = `Feil. Du har ${gameState.maxAttempts - gameState.attempts} forsøk igjen.`;
+            feedback.className = 'alert-warning';
+            feedback.style.display = 'block';
             document.getElementById('answer-input').disabled = false;
             document.getElementById('submit-answer').disabled = false;
-            document.getElementById('feedback').style.display = 'none';
-            attempts = 0;
-            hintUsed = false;
-            updateProgressDisplay();
             startTimer();
-
-            // Store the hint for the current image
-            window.gameState.currentHint = imageData.hint;
         } else {
-            showQuizResults();
-        }
-    }
-
-    // Update progress display
-    function updateProgressDisplay() {
-        const progressPercentage = (answeredQuestions / totalQuestions) * 100;
-        document.getElementById('progress-percentage').textContent = progressPercentage.toFixed(1);
-        document.getElementById('answered-questions').textContent = answeredQuestions;
-        document.getElementById('total-questions').textContent = totalQuestions;
-        document.getElementById('score').textContent = score;
-        document.getElementById('streak').textContent = streak;
-        document.getElementById('high-score').textContent = highScore;
-    }
-
-    // Start the timer
-    function startTimer() {
-        clearInterval(timer);
-        let timeLeft = timeLimit;
-        updateTimerDisplay(timeLeft);
-        document.getElementById('time-progress-fill').style.width = '100%';
-        timer = setInterval(() => {
-            timeLeft--;
-            updateTimerDisplay(timeLeft);
-            const progressPercent = (timeLeft / timeLimit) * 100;
-            document.getElementById('time-progress-fill').style.width = `${progressPercent}%`;
-            if (timeLeft <= 0) {
-                clearInterval(timer);
-                timeUpSound.play();
-                checkAnswer(true); // Time's up
-            }
-        }, 1000);
-    }
-
-    // Update timer display
-    function updateTimerDisplay(time) {
-        document.getElementById('timer').textContent = time;
-    }
-
-    // Check the user's answer
-    function checkAnswer(timeUp = false) {
-        const userAnswer = document.getElementById('answer-input').value.trim().toLowerCase();
-        const feedback = document.getElementById('feedback');
-
-        // Disable input to prevent multiple submissions
-        document.getElementById('answer-input').disabled = true;
-        document.getElementById('submit-answer').disabled = true;
-
-        clearInterval(timer);
-
-        if (userAnswer === correctAnswer.toLowerCase() && !timeUp) {
-            feedback.textContent = 'Riktig!';
-            feedback.className = 'alert-success';
+            feedback.textContent = `Feil. Riktig svar er: ${gameState.correctAnswer}`;
+            feedback.className = 'alert-danger';
             feedback.style.display = 'block';
-            correctSound.play();
-            score += hintUsed ? 5 : 10;
-            streak++;
-            if (streak > highScore) {
-                highScore = streak;
-            }
-            answeredQuestions++;
+            gameState.streak = 0;
+            gameState.answeredQuestions++;
             setTimeout(() => {
-                document.getElementById('answer-input').disabled = false;
-                document.getElementById('submit-answer').disabled = false;
                 loadNextImage();
             }, 2000);
-        } else {
-            attempts++;
-            incorrectSound.play();
-            if (attempts < maxAttempts && !timeUp) {
-                feedback.textContent = `Feil. Du har ${maxAttempts - attempts} forsøk igjen.`;
-                feedback.className = 'alert-warning';
-                feedback.style.display = 'block';
-                // Enable input for next attempt
-                document.getElementById('answer-input').disabled = false;
-                document.getElementById('submit-answer').disabled = false;
-                startTimer(); // Restart the timer for the next attempt
-            } else {
-                feedback.textContent = `Feil. Riktig svar er: ${correctAnswer}`;
-                feedback.className = 'alert-danger';
-                feedback.style.display = 'block';
-                streak = 0;
-                answeredQuestions++;
-                setTimeout(() => {
-                    document.getElementById('answer-input').disabled = false;
-                    document.getElementById('submit-answer').disabled = false;
-                    loadNextImage();
-                }, 2000);
-            }
         }
-        updateProgressDisplay();
     }
+    updateScoreDisplay();
+    updateProgressDisplay();
+}
 
-    // Show quiz results
-    function showQuizResults() {
-        clearInterval(timer); // Clear any existing timer
+function showResults() {
+    clearInterval(gameState.timer);
+    document.getElementById('final-score').textContent = `Din score: ${gameState.score}`;
+    document.getElementById('final-streak').textContent = `Høyeste streak: ${gameState.highScore}`;
+    showWindow('results-screen');
+}
 
-        // Hide the game screen and show the results screen
-        document.getElementById('game-screen').style.display = 'none';
-        const resultsScreen = document.getElementById('results-screen');
-        resultsScreen.style.display = 'block';
+// Event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('start-game').addEventListener('click', loadCategories);
 
-        // Update the results
-        document.getElementById('final-score').textContent = `Din score: ${score}`;
-        document.getElementById('final-streak').textContent = `Høyeste streak: ${highScore}`;
-    }
-
-    // Event Listeners
-    document.getElementById('start-game').addEventListener('click', () => {
-        showWindow('category-menu');
-        loadCategories();
-    });
-
-    document.getElementById('submit-answer').addEventListener('click', () => {
-        checkAnswer();
-    });
+    document.getElementById('submit-answer').addEventListener('click', () => checkAnswer());
 
     document.getElementById('answer-input').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -306,31 +275,23 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Back to categories button on the game screen
     document.getElementById('back-to-categories-game').addEventListener('click', () => {
         resetGameState();
         showWindow('category-menu');
-        loadCategories();
     });
 
-    // Back to main menu button
     document.getElementById('back-to-main').addEventListener('click', () => {
         showWindow('welcome-screen');
     });
 
-    // Event listeners for the results screen buttons
     document.getElementById('play-again').addEventListener('click', () => {
         resetGameState();
-        document.getElementById('results-screen').style.display = 'none';
         showWindow('category-menu');
-        loadCategories();
     });
 
     document.getElementById('back-to-categories-from-results').addEventListener('click', () => {
         resetGameState();
-        document.getElementById('results-screen').style.display = 'none';
         showWindow('category-menu');
-        loadCategories();
     });
 
     // Initialize the game
@@ -338,14 +299,125 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Expose necessary variables and functions for potential future use
-window.gameState = {
-    correctAnswer,
-    hintUsed,
-    maxAttempts,
-    timeLimit,
-    currentHint: ""
-};
-
+window.gameState = gameState;
 window.gameActions = {
-    setHintUsed: (value) => { hintUsed = value; }
+    setHintUsed: (value) => { gameState.hintUsed = value; }
+};
+// Flashcard mode
+function startFlashcardMode() {
+    resetGameState();
+    gameState.flashcardMode = true;
+    gameState.currentQuestionIndex = 0;
+    loadFlashcards();
+    showWindow('flashcard-screen');
+}
+
+function loadFlashcards() {
+    const categoryData = categoryImages[gameState.currentCategory];
+    gameState.currentFlashcard = categoryData[gameState.currentQuestionIndex];
+    showFlashcard();
+}
+
+function showFlashcard() {
+    const flashcardImage = document.getElementById('flashcard-image');
+    flashcardImage.src = `images/${gameState.currentCategory}/${gameState.currentFlashcard.image}`;
+    flashcardImage.alt = `ASK Tegn: ${gameState.currentFlashcard.image.split('.')[0]}`;
+    flashcardImage.onerror = () => {
+        flashcardImage.src = 'placeholder.jpg';
+        flashcardImage.alt = 'Bilde ikke tilgjengelig';
+    };
+    document.getElementById('flashcard-answer').textContent = '';
+    document.getElementById('flashcard-answer').style.display = 'none';
+    document.getElementById('show-answer').style.display = 'block';
+    document.getElementById('next-flashcard').style.display = 'none';
+}
+
+function loadNextFlashcard() {
+    const categoryData = categoryImages[gameState.currentCategory];
+    gameState.currentQuestionIndex++;
+    if (gameState.currentQuestionIndex < categoryData.length) {
+        gameState.currentFlashcard = categoryData[gameState.currentQuestionIndex];
+        showFlashcard();
+    } else {
+        gameState.currentQuestionIndex = 0;
+        gameState.currentFlashcard = categoryData[gameState.currentQuestionIndex];
+        showFlashcard();
+    }
+}
+
+// Progress tracking
+function updateProgressScreen() {
+    const progressContainer = document.getElementById('progress-container');
+    progressContainer.innerHTML = '';
+
+    Object.keys(categoryImages).forEach(category => {
+        const progressItem = document.createElement('div');
+        progressItem.classList.add('progress-item');
+
+        const categoryTitle = document.createElement('h3');
+        categoryTitle.textContent = category.replace(/-/g, ' ');
+        progressItem.appendChild(categoryTitle);
+
+        const totalQuestions = categoryImages[category].length;
+        const progressText = document.createElement('p');
+        progressText.textContent = `Totalt antall spørsmål: ${totalQuestions}`;
+        progressItem.appendChild(progressText);
+
+        progressContainer.appendChild(progressItem);
+    });
+}
+
+// Event listeners for flashcard mode
+document.getElementById('start-flashcard').addEventListener('click', () => {
+    showWindow('category-menu');
+    loadCategories();
+    document.querySelectorAll('.list_button').forEach(button => {
+        button.onclick = () => {
+            gameState.currentCategory = button.querySelector('.list_text').textContent.replace(/ /g, '-');
+            startFlashcardMode();
+        };
+    });
+});
+
+document.getElementById('show-answer').addEventListener('click', () => {
+    document.getElementById('flashcard-answer').textContent = gameState.currentFlashcard.image.split('.')[0].replace(/-/g, ' ');
+    document.getElementById('flashcard-answer').style.display = 'block';
+    document.getElementById('show-answer').style.display = 'none';
+    document.getElementById('next-flashcard').style.display = 'block';
+});
+
+document.getElementById('next-flashcard').addEventListener('click', loadNextFlashcard);
+
+document.getElementById('back-to-main-from-flashcard').addEventListener('click', () => {
+    showWindow('welcome-screen');
+});
+
+// Event listener for progress screen
+document.getElementById('view-progress').addEventListener('click', () => {
+    updateProgressScreen();
+    showWindow('progress-screen');
+});
+
+document.getElementById('back-to-main-from-progress').addEventListener('click', () => {
+    showWindow('welcome-screen');
+});
+
+// Hint system
+document.getElementById('show-hint').addEventListener('click', () => {
+    if (gameState.currentHint && !gameState.hintUsed) {
+        document.getElementById('feedback').textContent = `Hint: ${gameState.currentHint}`;
+        document.getElementById('feedback').className = 'alert-info';
+        document.getElementById('feedback').style.display = 'block';
+        gameState.hintUsed = true;
+        gameState.hintsUsed++;
+    }
+});
+
+// Initialize the game
+showWindow('welcome-screen');
+
+// Expose necessary variables and functions for potential future use
+window.gameState = gameState;
+window.gameActions = {
+    setHintUsed: (value) => { gameState.hintUsed = value; }
 };
